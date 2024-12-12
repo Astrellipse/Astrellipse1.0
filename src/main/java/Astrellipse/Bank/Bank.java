@@ -96,7 +96,7 @@ public class Bank implements Listener, CommandExecutor {
                     return true;
                 }
                 //在庫>=args[1]なら引き出して持たせる
-                db.drem(sender.getName().toLowerCase(),money);
+                db.drem(sender.getName(),money);
                 ItemStack item = new ItemStack(Material.EMERALD);
                 item.setAmount(money);
                 addItem((Player)sender,item);
@@ -123,7 +123,7 @@ public class Bank implements Listener, CommandExecutor {
                     return true;
                 }
                 //在庫>=args[1]なら引いてargs[1]の在庫に追加
-                String name = args[1].toLowerCase();
+                String name = args[1];
                 db.drem(sender.getName(),money);
                 db.dadd(name,money);
                 sender.sendMessage(name+"に"+money+"個送りました");
@@ -223,7 +223,7 @@ public class Bank implements Listener, CommandExecutor {
 
             }
             //在庫にamo個追加
-            db.dadd(e.getPlayer().getName().toLowerCase(),amo);
+            db.dadd(e.getPlayer().getName(),amo);
             e.getPlayer().sendMessage(amo+"個増えました");
             return;
         }
@@ -250,7 +250,7 @@ public class Bank implements Listener, CommandExecutor {
     //アイテム渡す
     void addItem(Player player,ItemStack item) {
         //空きがあるか無いかでそれぞれの渡し方
-        if (player.getInventory().firstEmpty() != -1) {
+        if (player.getInventory().firstEmpty() == -1) {
             player.getWorld().dropItem(player.getLocation(),item);
         } else {
             player.getInventory().addItem(item);

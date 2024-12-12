@@ -5,6 +5,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.sql.*;
+import java.util.Arrays;
 
 public class DbBank {
     //接続
@@ -34,7 +35,9 @@ public class DbBank {
 
     //SQLインジェクション対策されてるらしいプレースホルダとやらを使った物
     ///SQL1
-    int dget(String key) {
+    int dget(String k) {
+        //小文字
+        String key = k.toLowerCase();
         String selectQuery = "SELECT value FROM nyan WHERE key=?";
         String insertQuery = "INSERT INTO nyan (key, value) VALUES (?, ?)";
         try (
@@ -53,14 +56,16 @@ public class DbBank {
             }
             return 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            Bukkit.getLogger().warning(Arrays.toString(e.getStackTrace()));
             return -1;
         }
     }
 
     //値の上書き
     //SQL2
-    void drep(String key, int value) {
+    void drep(String k, int value) {
+        //小文字
+        String key = k.toLowerCase();
         String updateQuery = "UPDATE nyan SET value = ? WHERE key = ?";
         String insertQuery = "INSERT INTO nyan (key, value) VALUES (?, ?)";
         try {
