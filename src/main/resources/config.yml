@@ -1,2 +1,11 @@
 power:
   bank: true
+  customMob: true
+CustomMob:
+  test:
+    spawn: world/10/70/10
+    def: SKELETON
+    hp: 10
+    at: 1
+    drop: 1
+    cd: 5

@@ -33,7 +33,7 @@ public class Bank implements Listener, CommandExecutor {
     Inventory atmenu;
     //ATMenuの項目名一覧
     List<String> menu = new ArrayList<>();
-    //bankは利用可能か
+    //bank利用可能
     public static boolean bank = false;
 
     JavaPlugin plugin;
