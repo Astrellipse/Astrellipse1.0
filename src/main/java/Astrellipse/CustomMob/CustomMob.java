@@ -86,6 +86,8 @@ public class CustomMob implements CommandExecutor, Listener {
         //エンティティ召喚
         Location loc = strToLoc(sc.getString(key+".spawn"));
         Entity entity = Bukkit.getWorld(sc.getString(key+".location","world")).spawnEntity(loc, EntityType.valueOf(sc.getString(key+".def")));
+        LivingEntity e = (LivingEntity) entity;
+        e.setRemoveWhenFarAway(false);
         //名前セット
         entity.setCustomName(key);
         //タイプごとに設定しないといけないため現在ゾンビとスケルトンのみ
@@ -108,9 +110,7 @@ public class CustomMob implements CommandExecutor, Listener {
                 Location spawnLocation = strToLoc(sc.getString(key + ".spawn"));
                 Location underLocation = under1(spawnLocation);
 
-                // デバッグ用ログ
-                plugin.getLogger().info("Spawn location for key '" + key + "': " + spawnLocation);
-                plugin.getLogger().info("Block under spawn: " + underLocation.getBlock().getType());
+
 
                 if (underLocation.getBlock().getType() != Material.BARRIER) {
                     plugin.getLogger().info("No BARRIER block at: " + underLocation);
@@ -129,9 +129,6 @@ public class CustomMob implements CommandExecutor, Listener {
     //ロケーション変換
     Location strToLoc(String loc) {
         String[] str = loc.split("/");
-        for (String s : str) {
-            Bukkit.broadcastMessage(s);
-        }
         return new Location(Bukkit.getWorld(str[0]),Integer.parseInt(str[1]),Integer.parseInt(str[2]),Integer.parseInt(str[3]));
     }
 
@@ -152,7 +149,7 @@ public class CustomMob implements CommandExecutor, Listener {
             if (sc.contains(e.getEntity().getCustomName())) {
                 cd.put(e.getEntity().getCustomName(),sc.getInt(e.getEntity().getCustomName()+".cd"));
             }
-        } catch (NullPointerException exception) {
+        } catch (Exception exception) {
             return;
         }
 
