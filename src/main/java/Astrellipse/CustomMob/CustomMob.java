@@ -1,5 +1,6 @@
 package Astrellipse.CustomMob;
 
+import Astrellipse.Utl.U;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -11,10 +12,13 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class CustomMob implements CommandExecutor, Listener {
     //config.ymlのCustomMob以下
@@ -25,8 +29,8 @@ public class CustomMob implements CommandExecutor, Listener {
     JavaPlugin plugin;
     //クールダウン
     HashMap<String, Integer> cd = new HashMap<>();
-//    //モブ一覧
-//    HashMap<String, Location> mobs = new HashMap<>();
+    //ダメージを与えたプレイヤーのプール
+    Map<Entity,Map<Player,Double>> damageTracker = new HashMap<>();
 
     public CustomMob(JavaPlugin plugin, FileConfiguration config) {
         this.plugin = plugin;
@@ -88,6 +92,7 @@ public class CustomMob implements CommandExecutor, Listener {
         Entity entity = Bukkit.getWorld(sc.getString(key+".location","world")).spawnEntity(loc, EntityType.valueOf(sc.getString(key+".def")));
         LivingEntity e = (LivingEntity) entity;
         e.setRemoveWhenFarAway(false);
+
         //名前セット
         entity.setCustomName(key);
         //タイプごとに設定しないといけないため現在ゾンビとスケルトンのみ
@@ -109,8 +114,6 @@ public class CustomMob implements CommandExecutor, Listener {
                 cd.remove(key);
                 Location spawnLocation = strToLoc(sc.getString(key + ".spawn"));
                 Location underLocation = under1(spawnLocation);
-
-
 
                 if (underLocation.getBlock().getType() != Material.BARRIER) {
                     plugin.getLogger().info("No BARRIER block at: " + underLocation);
@@ -148,10 +151,46 @@ public class CustomMob implements CommandExecutor, Listener {
         try {
             if (sc.contains(e.getEntity().getCustomName())) {
                 cd.put(e.getEntity().getCustomName(),sc.getInt(e.getEntity().getCustomName()+".cd"));
+                //プレイヤー関与
+                if (!damageTracker.isEmpty()) {
+                    //分配
+                    //最初の段階として全員配布
+                    int amo = sc.getInt(".drop",0);
+                    ItemStack item = new ItemStack(Material.EMERALD);
+                    item.setAmount(amo);
+                    for (Player p : damageTracker.get(e.getEntity()).keySet()) {
+                        U.addItem(p,item);
+                    }
+                    //mobのデスとともに削除
+                    damageTracker.remove(e.getEntity());
+                }
+                return;
             }
         } catch (Exception exception) {
             return;
         }
+    }
 
+    @EventHandler
+    //エンティティ同士のダメージ
+    public void onDamage(EntityDamageByEntityEvent e) {
+        //カスタムネームを持つか
+        if (e.getEntity().getCustomName() == null) {
+            //プレイヤーか
+            if (e.getDamager().getType() == EntityType.PLAYER) {
+                //trackerから攻撃されたエンティティの分を取り出す
+                Map<Player,Double> map = damageTracker.get(e.getEntity());
+                Double d = e.getDamage();
+                //ダメージをmapへ映しそこからある場合とない場合で分ける
+                if (map.containsKey(e.getDamager())) {
+                    map.put((Player) e.getDamager(),d);
+                } else {
+                    d += map.get(e.getDamager());
+                    map.put((Player) e.getDamager(),d);
+                }
+                //trackerに戻す
+                damageTracker.put(e.getEntity(),map);
+            }
+        }
     }
 }
